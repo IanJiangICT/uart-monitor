@@ -13,9 +13,14 @@ module uart_monitor(
 	localparam CLKS_PER_BIT = MY_CLK_FREQ/BAUD_RATE;
 
 	logic my_clk;
+	integer logfd;
 
 	initial begin
 		my_clk = 0;
+
+		// Create an empty file to save log
+		logfd = $fopen(LOG_FILE, "w");
+		$fclose(logfd);
 	end
 
 	always
@@ -91,6 +96,11 @@ module uart_monitor(
 			S_CLEANUP : begin
 				r_SM_Main <= S_IDLE;
 				r_RX_DV   <= 1'b0;
+
+				// Re-open logfile as flushing out
+				logfd = $fopen(LOG_FILE, "a");
+				$fwrite(logfd, "%c", r_RX_Byte);
+				$fclose(logfd);
 			end
 
 			default :
