@@ -8,14 +8,20 @@ module uart_monitor(
 	parameter BAUD_RATE = 6250000; // Max baud of DW UART in simulation with APB = 100MHz, div = 1
 	//parameter BAUD_RATE = 115200; // Normal baud
 
-	localparam MY_CLK_FREQ = 100*1000*1000; // Internal clock of fixed frequency 100MHz
-	localparam MY_CLK_PERIOD_NS = 1000*1000*1000/MY_CLK_FREQ;
-	localparam CLKS_PER_BIT = MY_CLK_FREQ/BAUD_RATE;
+	longint baud_rate;
+	longint my_clk_freq; // Internal clock of fixed frequency 100MHz
+	longint my_clk_period_ns;
+	longint clks_per_bit;
 
 	logic my_clk;
 	integer logfd;
 
 	initial begin
+		baud_rate = BAUD_RATE;
+		my_clk_freq = 100*1000*1000; // Internal clock of fixed frequency 100MHz
+		my_clk_period_ns = 1000*1000*1000/my_clk_freq;
+		clks_per_bit = my_clk_freq/baud_rate;
+
 		my_clk = 0;
 
 		// Create an empty file to save log
@@ -24,7 +30,7 @@ module uart_monitor(
 	end
 
 	always
-		#(MY_CLK_PERIOD_NS/2) my_clk = !my_clk;
+		#(my_clk_period_ns/2) my_clk = !my_clk;
 
 	localparam S_IDLE    = 3'b000;
 	localparam S_START   = 3'b001;
@@ -52,7 +58,7 @@ module uart_monitor(
 			end
 
 			S_START : begin
-				if (r_Clock_Count == (CLKS_PER_BIT-1)/2) begin
+				if (r_Clock_Count == (clks_per_bit-1)/2) begin
 					if (txbr == 1'b0) begin
 						r_Clock_Count <= 0;
 						r_SM_Main     <= S_DATA;
@@ -65,7 +71,7 @@ module uart_monitor(
 			end
 
 			S_DATA : begin
-				if (r_Clock_Count < CLKS_PER_BIT-1) begin
+				if (r_Clock_Count < clks_per_bit-1) begin
 					r_Clock_Count <= r_Clock_Count + 1;
 					r_SM_Main     <= S_DATA;
 				end else begin
@@ -83,7 +89,7 @@ module uart_monitor(
 			end
 
 			S_STOP : begin
-				if (r_Clock_Count < CLKS_PER_BIT-1) begin
+				if (r_Clock_Count < clks_per_bit-1) begin
 					r_Clock_Count <= r_Clock_Count + 1;
 					r_SM_Main     <= S_STOP;
 				end else begin
