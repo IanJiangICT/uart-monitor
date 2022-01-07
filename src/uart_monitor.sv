@@ -6,6 +6,7 @@ module uart_monitor(
 
 	parameter LOG_FILE = "uart-monitor.log";
 	parameter BAUD_RATE = 6250000; // Max baud of DW UART in simulation with APB = 100MHz, div = 1
+	parameter BAUD_RATE = 1562500; // Max baud of DW UART in simulation with APB = 25MHz, div = 1
 	//parameter BAUD_RATE = 115200; // Normal baud
 
 	longint baud_rate;
